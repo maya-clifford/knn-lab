@@ -9,9 +9,8 @@
 #1. Use the question/target variable you submitted and 
 # build a model to answer the question you created for this dataset (make sure it is a classification problem, convert if necessary). 
 
-# An independent business metric for this problem is if colleges are 
-# able to increase how many students graduate on time by changing the 
-# factors that are most infulential in the model. 
+# For the college completion dataset, one potential question it could answer is how to predict what colleges are in the 
+# highest percentile for students who graduate in the typical amount of time. 
 
 # %% 
 # copy the cleaning from the example and partitioning of the data from last week's lab 
@@ -57,9 +56,6 @@ grad_data2[['level', 'control']] = grad_data2[['level', 'control']].astype('cate
 # In R, we convert vals to numbers, but they already are in this import
 grad_data2.info()
 
-
-
-
 # %% 
 # scaling the numerical data using min max scaler
 # make a list of all of the columns that are float or integer 
@@ -68,7 +64,6 @@ numeric_cols = list(grad_data2.select_dtypes('number'))
 grad_data2[numeric_cols] = MinMaxScaler().fit_transform(grad_data2[numeric_cols])
 # view the data to ensure it was done right 
 grad_data2.head()
-
 
 # %% 
 # one hot encoding factor variables
@@ -153,16 +148,20 @@ x = completion_clean.drop(columns=['grad_100_percentile_f'])
 # use train_test_split on x and y to get the train and test sets for each of the data frames
 # make the train set 70% of the data and stratify the data on y, ensuring that the prevalence of 
 # above average on-time graduation rates is the same for each of the data frames 
+# set a seed so the partitions are the same every time the code is run 
+seed = 42
 x_train, x_test, y_train, y_test = train_test_split(x, 
                                                     y, 
                                                     train_size=0.7, 
-                                                    stratify=y)
+                                                    stratify=y, 
+                                                    random_state=seed)
 
 # do the same thing as above except split the test set in half into tune and test sets 
 x_tune, x_test, y_tune, y_test = train_test_split(x_test, 
                                                   y_test, 
                                                   train_size=0.5, 
-                                                  stratify=y_test)
+                                                  stratify=y_test, 
+                                                  random_state=seed)
 
 
 
@@ -205,16 +204,33 @@ print(results_df.head())
 #4. No code question: If you adjusted the k hyperparameter what do you think would
 #happen to the threshold function? Would the confusion matrix look the same at the same threshold 
 #levels or not? Why or why not?
-
+#
 # The threshold function would still require over half of the nearest neighbors to get a certain classification
 # since this is a binary classification problem, but this would mean that more points are taken into account for
 # each classification. The confusion matrix would likely look slighly different as k changes, with it likely having 
 # more accurate classfications until k is optimized, and after that it would be worse at classifying the points as
 # it would be taking too many data points into account. 
-
+#
 #5. Evaluate the results using the confusion matrix. Then "walk" through your question, summarize what 
 #concerns or positive elements do you have about the model as it relates to your question? 
+#
+# The confusion matrix: 
+# %%
+print(pd.crosstab(y_test, y_hat))
 
+# %% [markdown]
+# The confusion matrix shows that the model did a very good job predicting if a college was in a signifigantly above average 
+# percentile for on time graduation rate for the test set. There were 119 colleges that weren't above average and 48 that were 
+# that the model correctly identified. On the other hand, there were only 7 above average colleges that the model thought weren't 
+# above average and 11 average or below colleges that the model thought were above average. This means that less than 10% of the 
+# colleges were incorrectly identified, which is lower than our prevalence of about 27%. 
+# 
+# A positive element about my model is I think it can do a pretty good job predicting if a college will be in an above average 
+# percentile for on-time graduation rate. This is exactly what my question is asking, so the model would be useful in answering 
+# that question. A concern that I have is how useful this model would be to colleges. It would be more useful if it could show 
+# the factors that were most infulential so that colleges would know what things would be the best to change to get in a higher 
+# percentile for on-time graduation rate. Colleges could use it, however, to test new data to see if their designation of above 
+# average or not would change when they changed some of the factors included in the model. 
 
 #6. Create two functions: One that cleans the data & splits into training|test and one that 
 #allows you to train and test the model with different k and threshold values, then use them to 
